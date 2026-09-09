@@ -35,3 +35,6 @@ v4.4 Torque Specs update:
 v4.4.1: Removed the local PIN/app-lock feature entirely. Existing ph_lock_hash_v42 values are cleared on launch.
 
 v4.4.2: Hard reset build. Removed obsolete lock styling, renamed the service worker, clears legacy PartHound caches/lock state, and includes reset.html for stubborn installed-PWA caches.
+
+
+v4.4.3: Search cleanup update. Part/OEM search text and recent searches are now session-only and start blank on a fresh launch. Garage, selected vehicle context, saved parts, listings, notes, service-manual notes, torque specs, and other saved data are preserved.
