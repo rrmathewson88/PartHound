@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#1b1d20" />
+<meta name="description" content="PartHound — vehicle-specific automotive parts search and fitment workspace." />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>PartHound</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-lockup">
+    <div class="mark" aria-label="PartHound logo"><span class="magnifier"></span><span class="wrench"></span></div>
+    <div><div class="eyebrow">MECHANICAL PARTS INTELLIGENCE</div><h1>PartHound</h1></div>
+  </div>
+  <div class="top-actions"><span id="networkBadge" class="network-badge">ONLINE</span><button id="lockBtn" class="ghost">LOCK</button><button id="installBtn" class="ghost" hidden>INSTALL</button></div>
+</header>
+
+<div id="appLock" class="app-lock" hidden>
+  <div class="lock-card">
+    <div class="lock-mark mark"><span class="magnifier"></span><span class="wrench"></span></div>
+    <div class="section-kicker">PARTHOUND SECURITY</div>
+    <h2 id="lockTitle">Unlock PartHound</h2>
+    <p id="lockText" class="muted">Enter your PIN to continue.</p>
+    <input id="lockPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="PIN" autocomplete="off" />
+    <input id="lockPinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="Confirm PIN" autocomplete="off" hidden />
+    <div id="lockStatus" class="helper"></div>
+    <button id="lockAction" type="button">UNLOCK</button>
+    <button id="lockReset" type="button" class="link-btn danger" hidden>RESET LOCAL PIN</button>
+  </div>
+</div>
+
+<main>
+<section class="hero card steel-panel">
+  <div class="status-strip"><span class="status-dot"></span> VEHICLE + PART SEARCH READY</div>
+  <h2>Pick a vehicle. Find the part.</h2>
+  <p>No garage entry required. Choose any vehicle below, decode a VIN, or reuse one from your garage.</p>
+
+  <div class="vehicle-picker">
+    <div class="picker-head"><strong>SEARCH VEHICLE</strong><span id="vehicleContextBadge">NO VEHICLE SELECTED</span></div>
+    <div class="vin-inline">
+      <input id="searchVin" maxlength="17" placeholder="VIN (optional)" autocomplete="off" />
+      <button id="searchVinBtn" class="secondary">DECODE VIN</button>
+    </div>
+    <div id="searchVinStatus" class="helper"></div>
+    <div class="vehicle-fields">
+      <select id="searchYear" aria-label="Year"><option value="">Year</option></select>
+      <input id="searchMake" aria-label="Make" list="searchMakeList" placeholder="Make — type to search" disabled autocomplete="off" /><datalist id="searchMakeList"></datalist>
+      <input id="searchModel" aria-label="Model" list="searchModelList" placeholder="Model — type to search" disabled autocomplete="off" /><datalist id="searchModelList"></datalist>
+      <input id="searchTrim" placeholder="Trim / engine (optional)" />
+    </div>
+    <div class="picker-actions"><button id="useVehicleBtn">USE FOR SEARCH</button><button id="saveContextBtn" class="ghost" disabled>SAVE TO GARAGE</button></div>
+  </div>
+
+  <div class="search-block">
+    <input id="searchInput" autocomplete="off" placeholder="Part name, OEM number, aftermarket number, or fitment question" />
+    <button id="searchBtn">SEARCH PARTS</button>
+  </div>
+  <div id="recentSearches" class="chips"></div>
+</section>
+
+<section class="section-head"><div><div class="section-kicker">LIVE SOURCE LAUNCHER</div><h3>Search sources</h3></div><span id="queryLabel" class="muted"></span></section>
+<section id="sourceGrid" class="source-grid"></section>
+
+<section class="section-head"><div><div class="section-kicker">FITMENT INTELLIGENCE</div><h3>PartHound matches</h3></div><span id="resultCount" class="muted"></span></section>
+<section id="results" class="result-list"></section>
+
+<section class="section-head"><div><div class="section-kicker">PRICE BENCH</div><h3>Compare listings</h3></div><button id="addListingBtn" class="link-btn">+ ADD LISTING</button></section>
+<section class="card price-bench"><div id="bestDeal" class="best-deal muted">Add listings to compare delivered prices.</div><div id="listingTable" class="listing-table"></div></section>
+
+<section class="section-head"><div><div class="section-kicker">MY VEHICLES</div><h3>Garage</h3></div><button id="addVehicleBtn" class="link-btn">+ ADD VEHICLE</button></section>
+<section id="garage" class="garage-grid"></section>
+
+<section class="section-head"><div><div class="section-kicker">SERVICE BAY</div><h3>Service manual</h3></div><span id="serviceVehicle" class="muted"></span></section>
+<section class="card service-manual">
+  <div class="service-toolbar">
+    <div><strong id="serviceHeading">Vehicle service workspace</strong><p class="muted">Use Mitchell 1 DIY for licensed repair information. Keep your own searchable notes and specs here in PartHound.</p></div>
+    <button id="openMitchellBtn">OPEN MITCHELL DIY</button>
+  </div>
+  <div class="service-search"><input id="serviceSearch" placeholder="Search your service notes, e.g. brakes, torque, coolant…" /><button id="addServiceBtn" class="secondary">+ ADD NOTE</button></div>
+  <div class="service-cats" id="serviceCats"></div>
+  <div id="serviceEntries" class="service-entries"></div>
+  <div class="torque-panel">
+    <div class="torque-head">
+      <div><div class="section-kicker">QUICK REFERENCE</div><h4>Torque specs</h4><p class="muted">Save verified fastener torque values for the selected vehicle. PartHound automatically shows both ft-lb and N·m.</p></div>
+      <button id="addTorqueBtn" class="secondary">+ ADD TORQUE SPEC</button>
+    </div>
+    <div class="torque-search-row">
+      <input id="torqueSearch" placeholder="Search component, fastener, location or note…" />
+      <select id="torqueSystem" aria-label="Preferred torque units"><option value="both">SHOW BOTH UNITS</option><option value="ftlb">FT-LB FIRST</option><option value="nm">N·M FIRST</option></select>
+    </div>
+    <div id="torqueEntries" class="torque-entries"></div>
+  </div>
+</section>
+
+<section class="section-head"><div><div class="section-kicker">BENCH STOCK</div><h3>Saved parts</h3></div><button id="clearSavedBtn" class="link-btn danger">CLEAR</button></section>
+<section id="saved" class="result-list"></section>
+
+<section class="section-head"><div><div class="section-kicker">BUILD LOG</div><h3>Project notes</h3></div><div class="mini-actions"><button id="exportBtn" class="link-btn">EXPORT</button><button id="importBtn" class="link-btn">IMPORT</button></div></section>
+<section class="card project-card"><textarea id="projectNotes" placeholder="Torque specs, measurements, donor notes, part numbers, cross-fit observations…"></textarea><input id="importFile" type="file" accept="application/json" hidden /></section>
+</main>
+
+<dialog id="vehicleDialog"><form method="dialog" id="vehicleForm">
+  <div class="dialog-title-row"><div><div class="section-kicker">GARAGE</div><h3>Add vehicle</h3></div><button type="button" class="icon-close" data-close="vehicleDialog">×</button></div>
+  <label>VIN <span class="muted">(optional)</span></label><div class="vin-row"><input id="vehVin" maxlength="17" placeholder="17-digit VIN" /><button type="button" id="decodeVinBtn" class="secondary">DECODE</button></div><div id="vinStatus" class="helper"></div>
+  <div class="divider"><span>OR PICK VEHICLE</span></div>
+  <label>Year</label><select id="vehYear"><option value="">Select year</option></select>
+  <label>Make</label><input id="vehMake" list="vehMakeList" placeholder="Type to search makes" disabled autocomplete="off" /><datalist id="vehMakeList"></datalist>
+  <label>Model</label><input id="vehModel" list="vehModelList" placeholder="Type to search models" disabled autocomplete="off" /><datalist id="vehModelList"></datalist>
+  <label>Trim / engine / drivetrain</label><input id="vehTrim" placeholder="Optional" />
+  <div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button value="default">SAVE TO GARAGE</button></div>
+</form></dialog>
+
+<dialog id="listingDialog"><form method="dialog" id="listingForm">
+  <div class="dialog-title-row"><div><div class="section-kicker">PRICE BENCH</div><h3>Add listing</h3></div><button type="button" class="icon-close" data-close="listingDialog">×</button></div>
+  <label>Seller / source</label><input id="listSeller" required placeholder="eBay, ECS, FCP Euro…" />
+  <label>Part / listing title</label><input id="listTitle" required placeholder="Part description" />
+  <div class="two-col"><div><label>Item price</label><input id="listPrice" inputmode="decimal" required placeholder="0.00" /></div><div><label>Shipping</label><input id="listShipping" inputmode="decimal" placeholder="0.00" /></div></div>
+  <label>Link</label><input id="listUrl" type="url" placeholder="https://…" />
+  <label>Fitment confidence</label><select id="listConfidence"><option>Confirmed OEM</option><option>Catalog fit</option><option selected>VIN / part-number verify</option><option>Community reported</option><option>Physical fit check</option><option>Unknown</option></select>
+  <div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button value="default">ADD LISTING</button></div>
+</form></dialog>
+
+
+<dialog id="torqueDialog"><form method="dialog" id="torqueForm">
+  <div class="dialog-title-row"><div><div class="section-kicker">TORQUE SPECS</div><h3>Add torque spec</h3></div><button type="button" class="icon-close" data-close="torqueDialog">×</button></div>
+  <label>Component / location</label><input id="torqueComponent" required placeholder="Front brake caliper carrier" />
+  <label>Fastener</label><input id="torqueFastener" placeholder="Carrier-to-knuckle bolts" />
+  <div class="two-col"><div><label>Torque value</label><input id="torqueValue" inputmode="decimal" required placeholder="90" /></div><div><label>Entered units</label><select id="torqueUnit"><option value="ftlb">ft-lb</option><option value="nm">N·m</option></select></div></div>
+  <label>Additional instruction <span class="muted">(optional)</span></label><input id="torqueAngle" placeholder="Example: +90°, replace bolts, lubricated threads…" />
+  <label>Source / reference <span class="muted">(optional)</span></label><input id="torqueSource" placeholder="Mitchell 1 DIY, factory manual, verified measurement…" />
+  <label>Notes <span class="muted">(optional)</span></label><textarea id="torqueNotes" placeholder="Bolt size, sequence, one-time-use note, conditions…"></textarea>
+  <div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button value="default">SAVE SPEC</button></div>
+</form></dialog>
+
+<dialog id="serviceDialog"><form method="dialog" id="serviceForm">
+  <div class="dialog-title-row"><div><div class="section-kicker">SERVICE MANUAL</div><h3>Add service note</h3></div><button type="button" class="icon-close" data-close="serviceDialog">×</button></div>
+  <label>Category</label><select id="serviceCategory"><option>Engine</option><option>Transmission</option><option>Brakes</option><option>Suspension</option><option>Electrical</option><option>HVAC</option><option>Fluids & Maintenance</option><option>Torque Specs</option><option>Body</option><option>Other</option></select>
+  <label>Title</label><input id="serviceTitle" required placeholder="Rear caliper carrier torque" />
+  <label>Procedure / specification / note</label><textarea id="serviceBody" required placeholder="Your notes, measurements, torque specs, part numbers, cautions…"></textarea>
+  <label>Source / reference <span class="muted">(optional)</span></label><input id="serviceSource" placeholder="Mitchell 1 DIY, factory PDF, personal measurement…" />
+  <div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button value="default">SAVE NOTE</button></div>
+</form></dialog>
+
+<template id="resultTemplate"><article class="result card"><div class="result-top"><div><div class="source"></div><h4 class="title"></h4></div><span class="confidence"></span></div><div class="meta"></div><p class="fitment"></p><div class="result-bottom"><strong class="price"></strong><div class="actions"><button class="ghost save-btn">SAVE</button><button class="open-btn">OPEN</button></div></div></article></template>
+<script src="app.js"></script>
+</body>
+</html>
