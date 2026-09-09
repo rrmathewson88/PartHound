@@ -134,45 +134,21 @@ $('#clearSavedBtn').onclick=()=>{if(saved.length&&confirm('Clear all saved parts
 const notes=$('#projectNotes');notes.value=localStorage.getItem('ph_notes')||'';notes.oninput=()=>localStorage.setItem('ph_notes',notes.value);$('#exportBtn').onclick=exportData;$('#importBtn').onclick=()=>$('#importFile').click();$('#importFile').onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''};
 function setNetwork(){const on=navigator.onLine;$('#networkBadge').textContent=on?'ONLINE':'OFFLINE';$('#networkBadge').classList.toggle('offline',!on)}window.addEventListener('online',setNetwork);window.addEventListener('offline',setNetwork);setNetwork();
 let deferredPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('#installBtn').hidden=false});$('#installBtn').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('#installBtn').hidden=true};
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+if('serviceWorker' in navigator){
+  window.addEventListener('load',async()=>{
+    try{
+      localStorage.removeItem('ph_lock_hash_v42');
+      sessionStorage.removeItem('ph_lock_hash_v42');
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs) await r.unregister();
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(k=>k.startsWith('parthound-')).map(k=>caches.delete(k)));
+      await navigator.serviceWorker.register('./sw-v442.js?v=442',{scope:'./'});
+    }catch(e){console.warn('PartHound cache reset:',e)}
+  },{once:true});
+}
 function initRender(){if(context)$('#vehicleContextBadge').textContent=label(context).toUpperCase();renderGarage();renderSaved();renderListings();renderRecent();renderService();renderTorque();if(lastQuery){$('#searchInput').value=lastQuery;refreshSearch()}else{renderSources('');renderResults([])}}
 initRender();
-// Local app lock: replaces host-level password protection so PWA assets remain installable.
-const LOCK_KEY='ph_lock_hash_v42';
-async function pinHash(pin){
-  const data=new TextEncoder().encode('PartHound-v4.2:'+pin);
-  const digest=await crypto.subtle.digest('SHA-256',data);
-  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-function showLock(mode){
-  const setup=mode==='setup';
-  $('#appLock').hidden=false;
-  $('#lockTitle').textContent=setup?'Set PartHound PIN':'Unlock PartHound';
-  $('#lockText').textContent=setup?'Create a local PIN for this device. Your PIN is not sent anywhere.':'Enter your PIN to continue.';
-  $('#lockPin').value=''; $('#lockPinConfirm').value='';
-  $('#lockPinConfirm').hidden=!setup;
-  $('#lockAction').textContent=setup?'SET PIN':'UNLOCK';
-  $('#lockReset').hidden=setup;
-  $('#lockStatus').textContent=''; $('#lockStatus').className='helper';
-  $('#lockPin').focus();
-  $('#lockAction').onclick=async()=>{
-    const pin=$('#lockPin').value.trim();
-    const status=$('#lockStatus'); status.className='helper';
-    if(!/^\d{4,12}$/.test(pin)){status.textContent='Use a 4–12 digit PIN.';status.classList.add('err');return}
-    if(setup){
-      if(pin!==$('#lockPinConfirm').value.trim()){status.textContent='PINs do not match.';status.classList.add('err');return}
-      localStorage.setItem(LOCK_KEY,await pinHash(pin));
-      $('#appLock').hidden=true;
-    }else{
-      if(await pinHash(pin)!==localStorage.getItem(LOCK_KEY)){status.textContent='Incorrect PIN.';status.classList.add('err');return}
-      $('#appLock').hidden=true;
-    }
-  };
-}
-$('#lockBtn').onclick=()=>showLock(localStorage.getItem(LOCK_KEY)?'unlock':'setup');
-$('#lockReset').onclick=()=>{
-  if(confirm('Reset the local PartHound PIN on this device?')){localStorage.removeItem(LOCK_KEY);showLock('setup')}
-};
-$('#lockPin').addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('#lockPinConfirm').hidden)$('#lockPinConfirm').focus();else if(e.key==='Enter')$('#lockAction').click()});
-$('#lockPinConfirm').addEventListener('keydown',e=>{if(e.key==='Enter')$('#lockAction').click()});
-showLock(localStorage.getItem(LOCK_KEY)?'unlock':'setup');
+// No app lock. Clear any legacy lock state.
+localStorage.removeItem('ph_lock_hash_v42');
+sessionStorage.removeItem('ph_lock_hash_v42');
